@@ -1,0 +1,6 @@
+name: mruby-glsl
+description: Glsl class
+author: @kjunichi
+website: https://github.com/kjunichi/mruby-glsl
+protocol: git
+repository: https://github.com/kjunichi/mruby-glsl.git
