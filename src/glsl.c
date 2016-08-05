@@ -39,8 +39,9 @@ initgl(mrb_state *mrb, mrb_value obj)
 {
   GLint compiled, linked;
   mrb_value shader;
-  int len;
+  GLsizei len;
 
+  fprintf(stderr, "initgl start\n");
   glEnable(GL_DEPTH_TEST);
   glDisable(GL_CULL_FACE);
 
@@ -61,15 +62,19 @@ initgl(mrb_state *mrb, mrb_value obj)
   //  exit(1);
 
   shader = mrb_iv_get(mrb, obj, mrb_intern_lit(mrb, "@vertexShader"));
+  mrb_funcall(mrb,mrb_top_self(mrb), "p", 1, shader);
   len = RSTRING_LEN(shader);
-  glShaderSource(vertShader, 1, RSTRING_PTR(shader), &len);
-
+  fprintf(stderr, "len = %d\n",len);
+  const char* source = RSTRING_PTR(shader);
+  glShaderSource(vertShader, 1, &source, &len);
+fprintf(stderr, "vertShader done.\n");
   // if (readShaderSource(fragShader, "simple.frag"))
   //  exit(1);
   shader = mrb_iv_get(mrb, obj, mrb_intern_lit(mrb, "@fragmentShader"));
   len = RSTRING_LEN(shader);
-  glShaderSource(fragShader, 1, RSTRING_PTR(shader), &len);
-
+  source = RSTRING_PTR(shader);
+  glShaderSource(fragShader, 1, &source, &len);
+fprintf(stderr, "fragShader done.\n");
   /* バーテックスシェーダのソースプログラムのコンパイル */
   glCompileShader(vertShader);
   glGetShaderiv(vertShader, GL_COMPILE_STATUS, &compiled);
@@ -137,21 +142,22 @@ scene()
 #endif
 }
 
-int getppm(ppmImage)
+int getppm(unsigned char **ppm)
 {
   int x, y, pos;
+  unsigned char *ppmImage;
   GLubyte *dataBuffer = NULL;
   unsigned char linebuf[3];
-
+fprintf(stderr ,"getppm start\n");
   ppmImage = (GLubyte *)malloc(gWidth * gHeight * 3 + 512);
 
-  pos = snprintf(ppmImage, 4, "P6\n");
-  pos += snprintf(ppmImage + pos, 32, "%d %d\n", gWidth, gHeight);
-  pos += snprintf(ppmImage + pos, 5, "255\n");
+  pos = snprintf((char*)ppmImage, 4, "P6\n");
+  pos += snprintf((char*)(ppmImage + pos), 32, "%d %d\n", gWidth, gHeight);
+  pos += snprintf((char*)(ppmImage + pos), 5, "255\n");
+fprintf(stderr,"pos = %d\n",pos);
+  dataBuffer = &(ppmImage[pos]);
 
-  dataBuffer = ppmImage + pos;
-
-  glReadPixels(0, 0, gWidth, gHeight, GL_RGB, GL_UNSIGNED_BYTE, &dataBuffer);
+  glReadPixels(0, 0, gWidth, gHeight, GL_RGB, GL_UNSIGNED_BYTE, dataBuffer);
 
   for (y = 0; y < gHeight / 2; y++) {
     for (x = 0; x < gWidth; x++) {
@@ -166,12 +172,14 @@ int getppm(ppmImage)
       dataBuffer[3 * (x + gWidth * (gHeight - 1 - y)) + 2] = linebuf[2];
     }
   }
+  *ppm = ppmImage;
   return pos + 3 * gWidth * gHeight;
 }
 
 static int
-display(unsigned char *ppmImage)
+display(unsigned char **ppmImage)
 {
+	fprintf(stderr,"display start\n");
   /* モデルビュー変換行列の初期化 */
   glMatrixMode(GL_MODELVIEW);
   glLoadIdentity();
@@ -191,10 +199,10 @@ display(unsigned char *ppmImage)
 }
 
 int
-render_image(mrb_state *mrb, mrb_value obj, unsigned char *ppmImage)
+render_image(mrb_state *mrb, mrb_value obj, unsigned char **ppmImage)
 {
   GLFWwindow *window;
-  int size;
+  int size = -1;
 
   if (!glfwInit())
     return -1;
@@ -260,6 +268,7 @@ render_image(mrb_state *mrb, mrb_value obj, unsigned char *ppmImage)
       // initgl();
       gDone = 1;
     }
+    fprintf(stderr, "before display\n");
     size = display(ppmImage);
   }
   glfwTerminate();

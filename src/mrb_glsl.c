@@ -13,7 +13,7 @@
 #define DONE mrb_gc_arena_restore(mrb, 0);
 
 extern int
-render_image(mrb_state *mrb, mrb_value obj, unsigned char *);
+render_image(mrb_state *mrb, mrb_value obj, unsigned char **);
 
 typedef struct {
   char *str;
@@ -54,7 +54,7 @@ mrb_glsl_render(mrb_state *mrb, mrb_value self)
   int size;
 
   mrb_value ppmImage;
-  size = render_image(mrb, self, buf);
+  size = render_image(mrb, self, &buf);
   ppmImage = mrb_str_new(mrb, buf, size);
   return ppmImage;
 }
