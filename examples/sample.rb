@@ -7,8 +7,8 @@ glsl.attachFragmentShader(io.read)
 io.close
 #p glsl.vertexShader
 #
-#img = glsl.render
+img = glsl.render
 #
-#f = File.open('glsl.ppm','w')
-#f.write img
-#f.close
+f = File.open('glsl.ppm','w')
+f.write img
+f.close
