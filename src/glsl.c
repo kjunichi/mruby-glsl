@@ -21,6 +21,7 @@ int gWidth;
 int gHeight;
 
 int gDone = 0;
+GLint resolutionLoc;
 
 /*
 ** 光源
@@ -74,17 +75,17 @@ initgl(mrb_state *mrb, mrb_value obj)
   shader = mrb_iv_get(mrb, obj, mrb_intern_lit(mrb, "@vertexShader"));
   /*mrb_funcall(mrb, mrb_top_self(mrb), "p", 1, shader);*/
   len = RSTRING_LEN(shader);
-  fprintf(stderr, "len = %d\n", len);
+  // fprintf(stderr, "len = %d\n", len);
   const char *source = RSTRING_PTR(shader);
   glShaderSource(vertShader, 1, &source, &len);
   fprintf(stderr, "vertShader done.\n");
-  // if (readShaderSource(fragShader, "simple.frag"))
-  //  exit(1);
+
   shader = mrb_iv_get(mrb, obj, mrb_intern_lit(mrb, "@fragmentShader"));
   len = RSTRING_LEN(shader);
   source = RSTRING_PTR(shader);
   glShaderSource(fragShader, 1, &source, &len);
   fprintf(stderr, "fragShader done.\n");
+
   /* バーテックスシェーダのソースプログラムのコンパイル */
   glCompileShader(vertShader);
   glGetShaderiv(vertShader, GL_COMPILE_STATUS, &compiled);
@@ -123,8 +124,11 @@ initgl(mrb_state *mrb, mrb_value obj)
     exit(1);
   }
 
+  fprintf(stderr, "resolutionLoc = %d\n", resolutionLoc);
   /* シェーダプログラムの適用 */
   glUseProgram(gl2Program);
+
+  resolutionLoc = glGetUniformLocation(gl2Program, "resolution");
 }
 
 static void
@@ -191,6 +195,7 @@ static int
 display(unsigned char **ppmImage)
 {
   fprintf(stderr, "display start\n");
+
   /* モデルビュー変換行列の初期化 */
   glMatrixMode(GL_MODELVIEW);
   glLoadIdentity();
@@ -226,7 +231,7 @@ render_image(mrb_state *mrb, mrb_value obj, unsigned char **ppmImage)
   glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 */
   glfwWindowHint(GLFW_VISIBLE, 0);
-  window = glfwCreateWindow(512, 512, "Simple example", NULL, NULL);
+  window = glfwCreateWindow(WIDTH, HEIGHT, "Simple example", NULL, NULL);
   if (!window) {
     glfwTerminate();
     printf("Oops glfwCreateWindow¥n");
@@ -239,6 +244,11 @@ render_image(mrb_state *mrb, mrb_value obj, unsigned char **ppmImage)
     int w, h;
 
     glfwGetFramebufferSize(window, &w, &h);
+    gWidth = w;
+    gHeight = h;
+
+    glUniform2f(resolutionLoc, gWidth, gHeight);
+    // glUniform2f(glGetUniformLocation(gl2Program, "resolution"), gWidth, gHeight);
     glViewport(0, 0, w, h);
     // OpenGLでの描画処理をここに書く
     glClear(GL_COLOR_BUFFER_BIT);
@@ -264,8 +274,6 @@ render_image(mrb_state *mrb, mrb_value obj, unsigned char **ppmImage)
     /* 視点の移動（物体の方を奥に移動）*/
     glTranslated(0.0, 0.0, -1.0);
     // scene();
-    gWidth = w;
-    gHeight = h;
 
     fprintf(stderr, "before display\n");
     size = display(ppmImage);
