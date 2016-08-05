@@ -2,16 +2,15 @@
 ## Glsl Test
 ##
 
-assert("Glsl#hello") do
-  t = Glsl.new "hello"
-  assert_equal("hello", t.hello)
+assert("Glsl#attachVertexShader") do
+  t = Glsl.new 
+  t.attachVertexShader("hogehoge")
+  assert_equal("hogehoge", t.vertexShader)
 end
 
-assert("Glsl#bye") do
-  t = Glsl.new "hello"
-  assert_equal("hello bye", t.bye)
+assert("Glsl#attachFragmentShader") do
+  t = Glsl.new 
+  t.attachFragmentShader("foo bar")
+  assert_equal("foo bar", t.fragmentShader)
 end
 
-assert("Glsl.hi") do
-  assert_equal("hi!!", Glsl.hi)
-end
