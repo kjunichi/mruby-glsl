@@ -1,8 +1,11 @@
+#ifndef __APPLE__
+#include <GL/glew.h>
+#endif
 #include <GLFW/glfw3.h>
 #ifdef __APPLE__
 #include <glu.h>
 #else
-#include <gl/glu.h>
+#include <GL/glu.h>
 #endif
 #include <stdio.h>
 #include <stdlib.h>
@@ -40,7 +43,13 @@ initgl(mrb_state *mrb, mrb_value obj)
   GLint compiled, linked;
   mrb_value shader;
   GLsizei len;
+#ifndef __APPLE__
+  GLenum err;
+#endif
 
+#ifndef __APPLE__
+  err = glewInit();
+#endif
   fprintf(stderr, "initgl start\n");
   glEnable(GL_DEPTH_TEST);
   glDisable(GL_CULL_FACE);
@@ -53,28 +62,29 @@ initgl(mrb_state *mrb, mrb_value obj)
   glLightfv(GL_LIGHT0, GL_AMBIENT, lightamb);
   glLightModeli(GL_LIGHT_MODEL_LOCAL_VIEWER, GL_TRUE);
 
+  fprintf(stderr, "initgl before glCreateShader\n");
   /* シェーダオブジェクトの作成 */
   vertShader = glCreateShader(GL_VERTEX_SHADER);
   fragShader = glCreateShader(GL_FRAGMENT_SHADER);
-
+  fprintf(stderr, "initgl after glCreateShader\n");
   /* シェーダのソースプログラムの読み込み */
   // if (readShaderSource(vertShader, "simple.vert"))
   //  exit(1);
 
   shader = mrb_iv_get(mrb, obj, mrb_intern_lit(mrb, "@vertexShader"));
-  mrb_funcall(mrb,mrb_top_self(mrb), "p", 1, shader);
+  /*mrb_funcall(mrb, mrb_top_self(mrb), "p", 1, shader);*/
   len = RSTRING_LEN(shader);
-  fprintf(stderr, "len = %d\n",len);
-  const char* source = RSTRING_PTR(shader);
+  fprintf(stderr, "len = %d\n", len);
+  const char *source = RSTRING_PTR(shader);
   glShaderSource(vertShader, 1, &source, &len);
-fprintf(stderr, "vertShader done.\n");
+  fprintf(stderr, "vertShader done.\n");
   // if (readShaderSource(fragShader, "simple.frag"))
   //  exit(1);
   shader = mrb_iv_get(mrb, obj, mrb_intern_lit(mrb, "@fragmentShader"));
   len = RSTRING_LEN(shader);
   source = RSTRING_PTR(shader);
   glShaderSource(fragShader, 1, &source, &len);
-fprintf(stderr, "fragShader done.\n");
+  fprintf(stderr, "fragShader done.\n");
   /* バーテックスシェーダのソースプログラムのコンパイル */
   glCompileShader(vertShader);
   glGetShaderiv(vertShader, GL_COMPILE_STATUS, &compiled);
@@ -142,19 +152,20 @@ scene()
 #endif
 }
 
-int getppm(unsigned char **ppm)
+int
+getppm(unsigned char **ppm)
 {
   int x, y, pos;
   unsigned char *ppmImage;
   GLubyte *dataBuffer = NULL;
   unsigned char linebuf[3];
-fprintf(stderr ,"getppm start\n");
+  fprintf(stderr, "getppm start\n");
   ppmImage = (GLubyte *)malloc(gWidth * gHeight * 3 + 512);
 
-  pos = snprintf((char*)ppmImage, 4, "P6\n");
-  pos += snprintf((char*)(ppmImage + pos), 32, "%d %d\n", gWidth, gHeight);
-  pos += snprintf((char*)(ppmImage + pos), 5, "255\n");
-fprintf(stderr,"pos = %d\n",pos);
+  pos = snprintf((char *)ppmImage, 4, "P6\n");
+  pos += snprintf((char *)(ppmImage + pos), 32, "%d %d\n", gWidth, gHeight);
+  pos += snprintf((char *)(ppmImage + pos), 5, "255\n");
+  fprintf(stderr, "pos = %d\n", pos);
   dataBuffer = &(ppmImage[pos]);
 
   glReadPixels(0, 0, gWidth, gHeight, GL_RGB, GL_UNSIGNED_BYTE, dataBuffer);
@@ -179,7 +190,7 @@ fprintf(stderr,"pos = %d\n",pos);
 static int
 display(unsigned char **ppmImage)
 {
-	fprintf(stderr,"display start\n");
+  fprintf(stderr, "display start\n");
   /* モデルビュー変換行列の初期化 */
   glMatrixMode(GL_MODELVIEW);
   glLoadIdentity();
@@ -256,18 +267,6 @@ render_image(mrb_state *mrb, mrb_value obj, unsigned char **ppmImage)
     gWidth = w;
     gHeight = h;
 
-    if (gDone == 0) {
-      const GLubyte *str;
-
-      str = glGetString(GL_VENDOR);
-      printf("VND:%s\n", str);
-      str = glGetString(GL_RENDERER);
-      printf("RND:%s\n", str);
-      str = glGetString(GL_VERSION);
-      printf("VER:%s\n", str);
-      // initgl();
-      gDone = 1;
-    }
     fprintf(stderr, "before display\n");
     size = display(ppmImage);
   }
