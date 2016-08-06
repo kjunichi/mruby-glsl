@@ -7,11 +7,13 @@ os:
 sudo: false
 addons:
   apt:
+    sources:
+      -sourceline: ppa:keithw/glfw3
     packages:
       - rake
       - bison
-      - libglfw3-dev
       - libglew-dev
+      - glfw3
 install:
 #    - if [ "$TRAVIS_OS_NAME" == "linux" ];then sudo apt-get -qq install rake bison git gperf; fi
     - if [ "$TRAVIS_OS_NAME" == "osx" ]; then brew update; fi
