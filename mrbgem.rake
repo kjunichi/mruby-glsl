@@ -12,4 +12,15 @@ MRuby::Gem::Specification.new('mruby-glsl') do |spec|
     spec.linker.libraries << 'GL'
   end
 
+  case RUBY_PLATFORM
+  when /mswin|mingw/
+    spec.linker.libraries << 'glfw3'
+    spec.linker.libraries << 'glew32'
+    spec.linker.libraries << 'glu32'
+    spec.linker.libraries << 'opengl32'
+    spec.linker.libraries << 'user32'
+    spec.linker.libraries << 'Advapi32'
+    spec.linker.libraries << 'gdi32'
+    spec.linker.libraries << 'shell32'
+  end
 end

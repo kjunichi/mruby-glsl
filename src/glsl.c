@@ -1,4 +1,4 @@
-#ifndef __APPLE__
+﻿#ifndef __APPLE__
 #include <GL/glew.h>
 #endif
 #include <GLFW/glfw3.h>
@@ -273,7 +273,6 @@ render_image(mrb_state *mrb, mrb_value obj, unsigned char **ppmImage)
 
     /* 視点の移動（物体の方を奥に移動）*/
     glTranslated(0.0, 0.0, -1.0);
-    // scene();
 
     fprintf(stderr, "before display\n");
     size = display(ppmImage);
