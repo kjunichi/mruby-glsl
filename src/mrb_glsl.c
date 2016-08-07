@@ -28,8 +28,6 @@ static mrb_value
 mrb_glsl_init(mrb_state *mrb, mrb_value self)
 {
   mrb_glsl_data *data;
-  char *str;
-  int len;
 
   data = (mrb_glsl_data *)DATA_PTR(self);
   if (data) {
@@ -55,7 +53,7 @@ mrb_glsl_render(mrb_state *mrb, mrb_value self)
 
   mrb_value ppmImage;
   size = render_image(mrb, self, &buf);
-  ppmImage = mrb_str_new(mrb, buf, size);
+  ppmImage = mrb_str_new(mrb, (const char *)buf, size);
   return ppmImage;
 }
 
