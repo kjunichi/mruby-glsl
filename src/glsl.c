@@ -14,9 +14,6 @@
 #include "mruby/variable.h"
 #include "mruby/string.h"
 
-#define WIDTH 300
-#define HEIGHT 300
-
 int gWidth;
 int gHeight;
 
@@ -213,12 +210,30 @@ display(unsigned char **ppmImage)
   scene();
   return getppm(ppmImage);
 }
+void
+getWindowSize(mrb_state *mrb, mrb_value obj, int *width, int *height)
+{
+  mrb_value value;
+
+  value = mrb_iv_get(mrb, obj, mrb_intern_lit(mrb, "@width"));
+  if (mrb_fixnum_p(value)) {
+    *width = mrb_fixnum(value);
+  } else {
+    *width = -1;
+  }
+  value = mrb_iv_get(mrb, obj, mrb_intern_lit(mrb, "@height"));
+  if (mrb_fixnum_p(value)) {
+    *height = mrb_fixnum(value);
+  } else {
+    *height = -1;
+  }
+}
 
 int
 render_image(mrb_state *mrb, mrb_value obj, unsigned char **ppmImage)
 {
   GLFWwindow *window;
-  int size = -1;
+  int size = -1, width, height;
 
   if (!glfwInit())
     return -1;
@@ -231,7 +246,8 @@ render_image(mrb_state *mrb, mrb_value obj, unsigned char **ppmImage)
   glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 */
   glfwWindowHint(GLFW_VISIBLE, 0);
-  window = glfwCreateWindow(WIDTH, HEIGHT, "Simple example", NULL, NULL);
+  getWindowSize(mrb, obj, &width, &height);
+  window = glfwCreateWindow(width, height, "Simple example", NULL, NULL);
   if (!window) {
     glfwTerminate();
     printf("Oops glfwCreateWindow¥n");
