@@ -3,3 +3,7 @@
 ```bash
 mruby simple.rb > simple.ppm
 ```
+
+```bash
+mruby mandelbrot.rb > m.ppm
+```
