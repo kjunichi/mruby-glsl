@@ -3,7 +3,7 @@
 ##
 
 assert("Glsl#attachVertexShader") do
-  t = Glsl.new 
+  t = Glsl.new
   t.attachVertexShader("hogehoge")
   assert_equal("hogehoge", t.vertexShader)
 end
@@ -13,4 +13,3 @@ assert("Glsl#attachFragmentShader") do
   t.attachFragmentShader("foo bar")
   assert_equal("foo bar", t.fragmentShader)
 end
-
