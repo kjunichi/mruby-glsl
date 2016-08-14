@@ -14,6 +14,9 @@
 #include "mruby/variable.h"
 #include "mruby/string.h"
 
+extern void
+getWindowSize(mrb_state *mrb, mrb_value obj, int *width, int *height);
+
 int gWidth;
 int gHeight;
 
@@ -210,49 +213,21 @@ display(unsigned char **ppmImage)
   scene();
   return getppm(ppmImage);
 }
-void
-getWindowSize(mrb_state *mrb, mrb_value obj, int *width, int *height)
-{
-  mrb_value value;
-
-  value = mrb_iv_get(mrb, obj, mrb_intern_lit(mrb, "@width"));
-  if (mrb_fixnum_p(value)) {
-    *width = mrb_fixnum(value);
-  } else {
-    *width = -1;
-  }
-  value = mrb_iv_get(mrb, obj, mrb_intern_lit(mrb, "@height"));
-  if (mrb_fixnum_p(value)) {
-    *height = mrb_fixnum(value);
-  } else {
-    *height = -1;
-  }
-}
 
 int
-render_image(mrb_state *mrb, mrb_value obj, unsigned char **ppmImage)
+glslInit()
 {
-  GLFWwindow *window;
-  int size = -1, width, height;
-
+  fprintf(stderr, "glslInit start\n");
   if (!glfwInit())
     return -1;
 
-  // OpenGL Version 3.2 Core Profile を選択する
-  /*
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-  glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-  glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
-*/
-  glfwWindowHint(GLFW_VISIBLE, 0);
-  getWindowSize(mrb, obj, &width, &height);
-  window = glfwCreateWindow(width, height, "Simple example", NULL, NULL);
-  if (!window) {
-    glfwTerminate();
-    printf("Oops glfwCreateWindow¥n");
-    return -1;
-  }
+  return 0;
+}
+
+int
+render_image(mrb_state *mrb, mrb_value obj, GLFWwindow *window, unsigned char **ppmImage)
+{
+  int size = -1, width, height;
 
   glfwMakeContextCurrent(window);
   initgl(mrb, obj);
@@ -293,6 +268,11 @@ render_image(mrb_state *mrb, mrb_value obj, unsigned char **ppmImage)
     fprintf(stderr, "before display\n");
     size = display(ppmImage);
   }
-  glfwTerminate();
   return size;
+}
+
+void
+glslTerminate()
+{
+  glfwTerminate();
 }

@@ -4,14 +4,15 @@ class Glsl
   attr_reader :width
   attr_reader :height
 
-  def initialize
-    @width = 256
-    @height = 256
-  end
+  # def initialize
+  #   @width = 256
+  #   @height = 256
+  # end
 
   def size(width, heigth)
     @width = width
     @height = height
+    setSize(width,height)
   end
 
   def attachVertexShader(shader)
