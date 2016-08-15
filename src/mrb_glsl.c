@@ -7,6 +7,8 @@
 */
 #ifndef _WIN32
 #include <sys/time.h>
+#else
+#include <windows.h>
 #endif
 #include "mruby.h"
 #include "mruby/data.h"
@@ -34,6 +36,8 @@ typedef struct {
   GLFWwindow *window;
 #ifndef _WIN32
   struct timeval start_tv, tv;
+#else
+  SYSTEMTIME start_st, st;
 #endif
 } mrb_glsl_data;
 
@@ -93,6 +97,8 @@ mrb_glsl_init(mrb_state *mrb, mrb_value self)
   data->window = window;
 #ifndef _WIN32
   gettimeofday(&(data->start_tv), NULL);
+#else
+  GetSystemTime( &(data->start_st) );
 #endif
   return self;
 }
@@ -138,6 +144,9 @@ mrb_glsl_render(mrb_state *mrb, mrb_value self)
 #ifndef _WIN32
   gettimeofday(&(data->tv), NULL);
   t = (data->tv.tv_usec - data->start_tv.tv_usec) / 1000000.0;
+#else
+  GetSystemTime( &(data->st) );
+  t = (data->st.wMilliseconds - data->start_st.wMilliseconds) / 1000.0;
 #endif
   size = render_image(mrb, self, window, t, &buf);
   ppmImage = mrb_str_new(mrb, (const char *)buf, size);

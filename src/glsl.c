@@ -1,8 +1,4 @@
-#ifndef _WIN32
-#include <sys/time.h>
-#endif
-
-#ifndef __APPLE__
+﻿#ifndef __APPLE__
 #include <GL/glew.h>
 #endif
 #include <GLFW/glfw3.h>
