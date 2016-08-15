@@ -5,7 +5,11 @@
 **
 ** See Copyright Notice in LICENSE
 */
-
+#ifndef _WIN32
+#include <sys/time.h>
+#else
+#include <windows.h>
+#endif
 #include "mruby.h"
 #include "mruby/data.h"
 #include "mruby/variable.h"
@@ -24,12 +28,17 @@ extern void
 glslTerminate();
 
 extern int
-render_image(mrb_state *mrb, mrb_value obj, GLFWwindow *, unsigned char **);
+render_image(mrb_state *mrb, mrb_value obj, GLFWwindow *, double, unsigned char **);
 
 typedef struct {
   char *str;
   int len;
   GLFWwindow *window;
+#ifndef _WIN32
+  struct timeval start_tv, tv;
+#else
+  SYSTEMTIME start_st, st;
+#endif
 } mrb_glsl_data;
 
 static void
@@ -63,7 +72,6 @@ mrb_glsl_init(mrb_state *mrb, mrb_value self)
 {
   mrb_glsl_data *data;
   GLFWwindow *window;
-  int width, height;
 
   fprintf(stderr, "init start.\n");
   data = (mrb_glsl_data *)DATA_PTR(self);
@@ -80,11 +88,18 @@ mrb_glsl_init(mrb_state *mrb, mrb_value self)
   window = glfwCreateWindow(256, 256, "mruby glsl", NULL, NULL);
   if (!window) {
     glfwTerminate();
-    printf("Oops glfwCreateWindow\n");
-    exit(1);
+    mrb_full_gc(mrb);
+    window = glfwCreateWindow(256, 256, "mruby glsl", NULL, NULL);
+    if (!window) {
+      mrb_raise(mrb, E_RUNTIME_ERROR, "Oops glfwCreateWindow fail!");
+    }
   }
   data->window = window;
-
+#ifndef _WIN32
+  gettimeofday(&(data->start_tv), NULL);
+#else
+  GetSystemTime( &(data->start_st) );
+#endif
   return self;
 }
 
@@ -122,11 +137,18 @@ mrb_glsl_render(mrb_state *mrb, mrb_value self)
   int size;
   mrb_value ppmImage;
   mrb_glsl_data *data;
+  double t;
 
   data = (mrb_glsl_data *)DATA_PTR(self);
   window = data->window;
-
-  size = render_image(mrb, self, window, &buf);
+#ifndef _WIN32
+  gettimeofday(&(data->tv), NULL);
+  t = (data->tv.tv_usec - data->start_tv.tv_usec) / 1000000.0;
+#else
+  GetSystemTime( &(data->st) );
+  t = (data->st.wMilliseconds - data->start_st.wMilliseconds) / 1000.0;
+#endif
+  size = render_image(mrb, self, window, t, &buf);
   ppmImage = mrb_str_new(mrb, (const char *)buf, size);
   return ppmImage;
 }
@@ -147,8 +169,9 @@ mrb_mruby_glsl_gem_init(mrb_state *mrb)
 {
   struct RClass *glsl;
   if (glslInit() != 0) {
-    fprintf(stderr, "Can't init glsls!");
-    exit(1);
+    // fprintf(stderr, "Can't init glsls!");
+    // exit(1);
+    mrb_raise(mrb, E_RUNTIME_ERROR, "Can't init glsls!");
   }
   glsl = mrb_define_class(mrb, "Glsl", mrb->object_class);
   mrb_define_method(mrb, glsl, "initialize", mrb_glsl_init, MRB_ARGS_NONE());

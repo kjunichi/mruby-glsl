@@ -17,11 +17,7 @@
 extern void
 getWindowSize(mrb_state *mrb, mrb_value obj, int *width, int *height);
 
-int gWidth;
-int gHeight;
-
-int gDone = 0;
-GLint resolutionLoc;
+GLint resolutionLoc, timeLoc;
 
 /*
 ** 光源
@@ -91,8 +87,7 @@ initgl(mrb_state *mrb, mrb_value obj)
   glGetShaderiv(vertShader, GL_COMPILE_STATUS, &compiled);
   // printShaderInfoLog(vertShader);
   if (compiled == GL_FALSE) {
-    fprintf(stderr, "Compile error in vertex shader.\n");
-    exit(1);
+    mrb_raise(mrb, E_RUNTIME_ERROR, "Compile error in vertex shader.\n");
   }
 
   /* フラグメントシェーダのソースプログラムのコンパイル */
@@ -124,11 +119,12 @@ initgl(mrb_state *mrb, mrb_value obj)
     exit(1);
   }
 
-  fprintf(stderr, "resolutionLoc = %d\n", resolutionLoc);
+  // fprintf(stderr, "resolutionLoc = %d\n", resolutionLoc);
   /* シェーダプログラムの適用 */
   glUseProgram(gl2Program);
 
   resolutionLoc = glGetUniformLocation(gl2Program, "resolution");
+  timeLoc = glGetUniformLocation(gl2Program, "time");
 }
 
 static void
@@ -157,42 +153,42 @@ scene()
 }
 
 int
-getppm(unsigned char **ppm)
+getppm(unsigned char **ppm, int width, int height)
 {
   int x, y, pos;
   unsigned char *ppmImage;
   GLubyte *dataBuffer = NULL;
   unsigned char linebuf[3];
   fprintf(stderr, "getppm start\n");
-  ppmImage = (GLubyte *)malloc(gWidth * gHeight * 3 + 512);
+  ppmImage = (GLubyte *)malloc(width * height * 3 + 512);
 
   pos = snprintf((char *)ppmImage, 4, "P6\n");
-  pos += snprintf((char *)(ppmImage + pos), 32, "%d %d\n", gWidth, gHeight);
+  pos += snprintf((char *)(ppmImage + pos), 32, "%d %d\n", width, height);
   pos += snprintf((char *)(ppmImage + pos), 5, "255\n");
   fprintf(stderr, "pos = %d\n", pos);
   dataBuffer = &(ppmImage[pos]);
 
-  glReadPixels(0, 0, gWidth, gHeight, GL_RGB, GL_UNSIGNED_BYTE, dataBuffer);
+  glReadPixels(0, 0, width, height, GL_RGB, GL_UNSIGNED_BYTE, dataBuffer);
 
-  for (y = 0; y < gHeight / 2; y++) {
-    for (x = 0; x < gWidth; x++) {
-      linebuf[0] = dataBuffer[3 * (x + gWidth * y)];
-      linebuf[1] = dataBuffer[3 * (x + gWidth * y) + 1];
-      linebuf[2] = dataBuffer[3 * (x + gWidth * y) + 2];
-      dataBuffer[3 * (x + gWidth * y)] = dataBuffer[3 * (x + gWidth * (gHeight - 1 - y))];
-      dataBuffer[3 * (x + gWidth * y) + 1] = dataBuffer[3 * (x + gWidth * (gHeight - 1 - y)) + 1];
-      dataBuffer[3 * (x + gWidth * y) + 2] = dataBuffer[3 * (x + gWidth * (gHeight - 1 - y)) + 2];
-      dataBuffer[3 * (x + gWidth * (gHeight - 1 - y))] = linebuf[0];
-      dataBuffer[3 * (x + gWidth * (gHeight - 1 - y)) + 1] = linebuf[1];
-      dataBuffer[3 * (x + gWidth * (gHeight - 1 - y)) + 2] = linebuf[2];
+  for (y = 0; y < height / 2; y++) {
+    for (x = 0; x < width; x++) {
+      linebuf[0] = dataBuffer[3 * (x + width * y)];
+      linebuf[1] = dataBuffer[3 * (x + width * y) + 1];
+      linebuf[2] = dataBuffer[3 * (x + width * y) + 2];
+      dataBuffer[3 * (x + width * y)] = dataBuffer[3 * (x + width * (height - 1 - y))];
+      dataBuffer[3 * (x + width * y) + 1] = dataBuffer[3 * (x + width * (height - 1 - y)) + 1];
+      dataBuffer[3 * (x + width * y) + 2] = dataBuffer[3 * (x + width * (height - 1 - y)) + 2];
+      dataBuffer[3 * (x + width * (height - 1 - y))] = linebuf[0];
+      dataBuffer[3 * (x + width * (height - 1 - y)) + 1] = linebuf[1];
+      dataBuffer[3 * (x + width * (height - 1 - y)) + 2] = linebuf[2];
     }
   }
   *ppm = ppmImage;
-  return pos + 3 * gWidth * gHeight;
+  return pos + 3 * width * height;
 }
 
 static int
-display(unsigned char **ppmImage)
+display(unsigned char **ppmImage, int width, int height)
 {
   fprintf(stderr, "display start\n");
 
@@ -211,7 +207,7 @@ display(unsigned char **ppmImage)
 
   /* シーンの描画 */
   scene();
-  return getppm(ppmImage);
+  return getppm(ppmImage, width, height);
 }
 
 int
@@ -225,9 +221,9 @@ glslInit()
 }
 
 int
-render_image(mrb_state *mrb, mrb_value obj, GLFWwindow *window, unsigned char **ppmImage)
+render_image(mrb_state *mrb, mrb_value obj, GLFWwindow *window, double t, unsigned char **ppmImage)
 {
-  int size = -1, width, height;
+  int size = -1;
 
   glfwMakeContextCurrent(window);
   initgl(mrb, obj);
@@ -235,10 +231,9 @@ render_image(mrb_state *mrb, mrb_value obj, GLFWwindow *window, unsigned char **
     int w, h;
 
     glfwGetFramebufferSize(window, &w, &h);
-    gWidth = w;
-    gHeight = h;
 
-    glUniform2f(resolutionLoc, gWidth, gHeight);
+    glUniform2f(resolutionLoc, w, h);
+    glUniform1f(timeLoc, (float)t);
     // glUniform2f(glGetUniformLocation(gl2Program, "resolution"), gWidth, gHeight);
     glViewport(0, 0, w, h);
     // OpenGLでの描画処理をここに書く
@@ -266,7 +261,7 @@ render_image(mrb_state *mrb, mrb_value obj, GLFWwindow *window, unsigned char **
     glTranslated(0.0, 0.0, -1.0);
 
     fprintf(stderr, "before display\n");
-    size = display(ppmImage);
+    size = display(ppmImage, w, h);
   }
   return size;
 }
