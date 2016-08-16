@@ -144,6 +144,7 @@ mrb_glsl_render(mrb_state *mrb, mrb_value self)
 #ifndef _WIN32
   gettimeofday(&(data->tv), NULL);
   t = (data->tv.tv_usec - data->start_tv.tv_usec) / 1000000.0;
+  t = t+(data->tv.tv_sec - data->start_tv.tv_sec);
 #else
   GetSystemTime( &(data->st) );
   t = (data->st.wMilliseconds - data->start_st.wMilliseconds) / 1000.0;

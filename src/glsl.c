@@ -260,8 +260,13 @@ render_image(mrb_state *mrb, mrb_value obj, GLFWwindow *window, double t, unsign
     /* 視点の移動（物体の方を奥に移動）*/
     glTranslated(0.0, 0.0, -1.0);
 
-    fprintf(stderr, "before display\n");
+    //fprintf(stderr, "before display\n");
     size = display(ppmImage, w, h);
+    /*
+    glfwSwapBuffers(window);
+    glfwPollEvents();
+    fprintf(stderr, "time = %f\n", t);
+    */
   }
   return size;
 }
