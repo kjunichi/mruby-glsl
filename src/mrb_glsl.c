@@ -73,7 +73,7 @@ mrb_glsl_init(mrb_state *mrb, mrb_value self)
   mrb_glsl_data *data;
   GLFWwindow *window;
 
-  fprintf(stderr, "init start.\n");
+  // fprintf(stderr, "init start.\n");
   data = (mrb_glsl_data *)DATA_PTR(self);
   if (data) {
     mrb_free(mrb, data);
@@ -110,15 +110,15 @@ mrb_glsl_set_size(mrb_state *mrb, mrb_value self)
   mrb_glsl_data *data;
   GLFWwindow *window;
 
-  fprintf(stderr, "set_size start.\n");
+  // fprintf(stderr, "set_size start.\n");
   getWindowSize(mrb, self, &width, &height);
-  fprintf(stderr, "w,h = %d, %d\n", width, height);
+  // fprintf(stderr, "w,h = %d, %d\n", width, height);
   data = (mrb_glsl_data *)DATA_PTR(self);
   window = data->window;
   if (window != NULL) {
     glfwSetWindowSize(window, width, height);
   }
-  fprintf(stderr, "set_size end.\n");
+  // fprintf(stderr, "set_size end.\n");
 
   return mrb_nil_value();
 }
