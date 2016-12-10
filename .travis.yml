@@ -13,7 +13,7 @@ install:
     - if [ "$TRAVIS_OS_NAME" == "osx" ]; then brew update; fi
     - if [ "$TRAVIS_OS_NAME" == "osx" ]; then brew install glfw3; fi
     - if [ "$TRAVIS_OS_NAME" == "osx" ]; then ls /usr/local/Cellar/glfw/3.2.1/lib ; fi
-    - if [ "$TRAVIS_OS_NAME" == "osx" ]; then ls /usr/local/opt/glfw3/lib/ ; fi
+    - if [ "$TRAVIS_OS_NAME" == "osx" ]; then ls /usr/local/opt/glfw/lib/ ; fi
     
 before_script:
   - cd ../
