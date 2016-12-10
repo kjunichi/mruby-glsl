@@ -11,15 +11,14 @@ install:
     - if [ "$TRAVIS_OS_NAME" == "linux" ];then sudo apt-get update; fi
     - if [ "$TRAVIS_OS_NAME" == "linux" ];then sudo apt-get -qq install bison libglew-dev libglfw3-dev; fi
     - if [ "$TRAVIS_OS_NAME" == "osx" ]; then brew update; fi
-    - if [ "$TRAVIS_OS_NAME" == "osx" ]; then brew install glfw3; fi
-    - if [ "$TRAVIS_OS_NAME" == "osx" ]; then brew info glfw3; fi
-    - if [ "$TRAVIS_OS_NAME" == "osx" ]; then brew list glfw3; fi
-    - if [ "$TRAVIS_OS_NAME" == "osx" ]; then ls /usr/local/lib/libglfw3*; fi
+    - if [ "$TRAVIS_OS_NAME" == "osx" ]; then brew install glfw3; fi   
     
 before_script:
   - cd ../
   - git clone https://github.com/mruby/mruby.git
   - cd mruby
   - cp -fp ../mruby-glsl/.travis_build_config.rb build_config.rb
+  - if [ "$TRAVIS_OS_NAME" == "osx" ]; then export LDFLAGS=-L/usr/local/Cellar/glfw/3.2.1/lib; fi
+  
 script:
   - make all
