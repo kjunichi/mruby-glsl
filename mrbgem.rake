@@ -4,7 +4,7 @@ MRuby::Gem::Specification.new('mruby-glsl') do |spec|
   if RUBY_PLATFORM =~ /darwin/i
     spec.cc.flags << "-I`xcrun --sdk macosx --show-sdk-path`/System/Library/Frameworks/OpenGL.framework/Versions/A/Headers"
     spec.cc.flags << '-I/usr/local/include'
-    spec.linker.flags << '-framework OpenGL -L/usr/local/lib -lglfw3'
+    spec.linker.flags << '-framework OpenGL -L/usr/local/opt/glfw/lib -lglfw'
   end
   if RUBY_PLATFORM =~ /linux/i
     spec.linker.libraries << 'glfw'
